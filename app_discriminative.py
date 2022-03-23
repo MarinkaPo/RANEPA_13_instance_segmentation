@@ -8,10 +8,10 @@ from detectron2.config import get_cfg
 from detectron2.utils.visualizer import Visualizer
 from detectron2.data import MetadataCatalog, DatasetCatalog
 
-
+###-----------------------------------###
 @st.cache(persist=True)
 def initialization():
-    """Loads configuration and model for the prediction.
+    """Загружаем модель и config для сегментации.
     
     Returns:
         cfg (detectron2.config.config.CfgNode): Configuration for the model.
@@ -21,17 +21,19 @@ def initialization():
         
     """
     cfg = get_cfg()
-    # Force model to operate within CPU, erase if CUDA compatible devices ara available
+    # Устанавливаем cpu, как device для модели.
+    # Если установлена CUDA удалить эту строку:
     cfg.MODEL.DEVICE = 'cpu'
     # Add project-specific config (e.g., TensorMask) here if you're not running a model in detectron2's core library
+    # загружаем модель:
     cfg.merge_from_file(model_zoo.get_config_file("COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml"))
-    # Set threshold for this model
-    cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.5  
-    # Find a model from detectron2's model zoo. You can use the https://dl.fbaipublicfiles... url as well
+    # Устанавливаем порог определения объектов:
+    cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.7  
+    # Подгружаем веса в модель, см.больше тут: https://dl.fbaipublicfiles...
     cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url("COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml")
-    # Get classes names for the dataset of interest
+    # Подгружаем названия классов для определения:
     classes_names = MetadataCatalog.get(cfg.DATASETS.TRAIN[0]).thing_classes
-    # Initialize prediction model
+    # Устанавливаем predictor:
     predictor = DefaultPredictor(cfg)
 
     return cfg, classes_names, predictor
@@ -52,7 +54,7 @@ def output_image(cfg, img, outputs):
 
 #@st.cache
 def retrieve_image():
-    uploaded_img = st.file_uploader("Choose an image...", type=['jpg', 'jpeg', 'png'])
+    uploaded_img = st.file_uploader("Загрузите изображение ниже", type=['jpg', 'jpeg', 'png'])
     uploaded_img_cache = None
     if uploaded_img is not None and uploaded_img != uploaded_img_cache:
         uploaded_img_cache = uploaded_img
@@ -118,10 +120,30 @@ def main():
 
     # Streamlit initialization
     st.title("Instance Segmentation")
-    st.sidebar.title("Options")
+    # ---------------------------------#
+    # О проекте
+    expander_bar = st.expander("Что это такое и как это работает?")
+    expander_bar.markdown(
+        """
+    В широком смысле «сегментация», как следует из Оксфордского словаря, — это разделение чего-либо на несколько частей, либо одна из таких частей. В нашем случае сегментация — это задача в компьютерном зрении, которая позволяет разделить цифровое изображение на разные части (сегменты) в соответствии с тем, какому объекту какие пиксели принадлежат. Таким образом мы получаем попиксельную маску объекта.
+
+    **Виды сегментации**:
+
+    * **Семантическая сегментация (Semantic segmentation)** — определяет принадлежность наборов пикселей на изображении к определенным классам объектов (например, кошки, собаки, люди, цветы, автомобили и т.д.). 
+    * **Инстанс-сегментация (Instance segmentation)** — в отличие от семантической сегментации, в этой задаче каждый объект внутри одного класса выделяется отдельными сегментами. Например, если на изображении пять кошек, две собаки и десять растений, семантическая сегментация просто выделит все области, на которых есть кошки, собаки или растения, не разделяя отдельные объекты внутри каждого класса (определит, что на изображении есть кошки, собаки и растения), в то время как инстанс-сегментация выделит каждую кошку, собаку и растение как отдельный объект. 
+    * **Паноптическая сегментация (Panoptic segmentation)** — объединяет задачи семантической и инстанс-сегментации. Также в задаче паноптической сегментации каждому пикселю изображения должна быть присвоена ровно одна метка.
+    
+    **Используемые библиотеки:** cv2, detectron2, streamlit.
+
+    **Полезно почитать:** [Detectron2](https://github.com/facebookresearch/detectron2), [Семантическая и инстанс-сегменация](https://neurohive.io/ru/osnovy-data-science/semantic-segmention/).
+    
+    """
+    )
+    # ---------------------------------#
+    st.sidebar.title("Опции для сегментации")
     ## Select classes to be detected by the model
     classes_to_detect = st.sidebar.multiselect(
-        "Select which classes to detect", classes, ['person'])
+        "Выберите классы для определения на изображении:", classes, ['person'])
     mask = np.isin(classes, classes_to_detect)
     class_idxs = np.nonzero(mask)
 
@@ -129,7 +151,7 @@ def main():
     img_placeholder = st.empty()
 
     # Retrieve image
-    uploaded_img = st.file_uploader("Choose an image...", type=['jpg', 'jpeg', 'png'])
+    uploaded_img = st.file_uploader("Загрузите изображение ниже", type=['jpg', 'jpeg', 'png'])
     if uploaded_img is not None:
         try:
             file_bytes = np.asarray(bytearray(uploaded_img.read()), dtype=np.uint8)
@@ -138,9 +160,9 @@ def main():
             outputs = inference(predictor, img)
             outputs = discriminate(outputs, class_idxs)
             out_image = output_image(cfg, img, outputs)
-            st.image(out_image, caption='Processed Image', use_column_width=True)        
+            st.image(out_image, caption='Загруженное и обработанное изображение', use_column_width=True)        
         except:
-            st.subheader("Please, reupload an image to see the changes")
+            st.subheader("Пожалуйста, загрузите изображение заново, чтобы увидеть изменения")
 
 
 if __name__ == '__main__':
