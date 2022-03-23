@@ -20,7 +20,7 @@ cycler==0.10.0
 Cython==0.29.21
 decorator==4.4.2
 defusedxml==0.6.0
-detectron2==0.6+cpu
+detectron2==0.6
 entrypoints==0.3
 enum-compat==0.0.3
 future==0.18.2
