@@ -9,7 +9,7 @@ from detectron2.config import get_cfg
 from detectron2.utils.visualizer import Visualizer
 from detectron2.data import MetadataCatalog, DatasetCatalog
 
-###-----------------------------------###
+# -----------------ФУНКЦИИ ДЛЯ ПРИЛОЖЕНИЯ-----------------
 @st.cache(persist=True)
 def initialization():
     """Загружаем модель и config для сегментации.
@@ -39,10 +39,8 @@ def initialization():
 
     return cfg, classes_names, predictor
 
-
 def inference(predictor, img):
     return predictor(img)
-
 
 @st.cache
 def output_image(cfg, img, outputs):
@@ -51,7 +49,6 @@ def output_image(cfg, img, outputs):
     processed_img = out.get_image() #[:, :, ::-1]
 
     return processed_img
-
 
 #@st.cache
 def retrieve_image():
@@ -68,7 +65,6 @@ def retrieve_image():
         #     pass
         # return img
     
-
 @st.cache
 def image(uploaded_img):
     file_bytes = np.asarray(bytearray(uploaded_img.read()), dtype=np.uint8)
@@ -78,8 +74,6 @@ def image(uploaded_img):
     except:
         return None
     return img
-
-
 
 @st.cache
 def discriminate(outputs, classes_to_detect):
@@ -102,9 +96,9 @@ def discriminate(outputs, classes_to_detect):
 
     """
     pred_classes = np.array(outputs['instances'].pred_classes)
-    # Take the elements matching *classes_to_detect*
+    # Элементы, соответствующие выбранным классам *classes_to_detect*
     mask = np.isin(pred_classes, classes_to_detect)
-    # Get the indexes
+    # Получаем индексы
     idx = np.nonzero(mask)
 
     # Get Instance values as a dict and leave only the desired ones
@@ -114,57 +108,96 @@ def discriminate(outputs, classes_to_detect):
 
     return outputs
 
-
+# -----------------САМО ПРИЛОЖЕНИЕ-----------------
 def main():
-    # Initialization
+    # Инициализация
     cfg, classes, predictor = initialization()
 
     # Streamlit initialization
-    st.title("Instance Segmentation")
-    # ---------------------------------#
-    # О проекте
-    expander_bar = st.expander("Что это такое и как это работает?")
+    st.markdown('''<h1 style='text-align: center; color: #9F2B68;'
+            >Instance segmentation</h1>''', 
+            unsafe_allow_html=True)
+    st.write("""
+        Данное приложение позволяет познакомиться с основами сегментации изображений. 
+        \nДля этого используется модель *mask_rcnn_R_50_FPN_3x*, обученная распознавать и выделять на фото 80 классов изображений.
+        \n**Используемые библиотеки:** cv2, detectron2, streamlit.
+
+        \n**Полезно почитать:** [Detectron2](https://github.com/facebookresearch/detectron2), [Семантическая и инстанс-сегменация](https://neurohive.io/ru/osnovy-data-science/semantic-segmention/).
+        \nДанные подготовили сотрудники ЛИА РАНХиГС.
+        """)
+    # ----------------О проекте----------------#
+
+    expander_bar = st.expander("Что такое сегментация изображений?")
     expander_bar.markdown(
         """
-    В широком смысле «сегментация», как следует из Оксфордского словаря, — это разделение чего-либо на несколько частей, либо одна из таких частей. В нашем случае сегментация — это задача в компьютерном зрении, которая позволяет разделить цифровое изображение на разные части (сегменты) в соответствии с тем, какому объекту какие пиксели принадлежат. Таким образом мы получаем попиксельную маску объекта.
+        В широком смысле **«сегментация»**, — это разделение чего-либо на несколько частей, либо одна из таких частей. 
+        \nВ нашем случае сегментация — это задача в компьютерном зрении, которая позволяет разделить цифровое изображение на разные части (сегменты) в соответствии с тем, какому объекту какие пиксели принадлежат. Таким образом мы получаем попиксельную маску объекта.
 
-    **Виды сегментации**:
+        \n**Некоторыми практическими применениями сегментации изображений являются:**
+        \n* Исследование медицинских изображений
+        \n* Выделение объектов на спутниковых снимках
+        \n* Распознавание лиц
+        \n* Распознавание отпечатков пальцев
+        \n* Системы управления дорожным движением
+        \n* Обнаружение стоп-сигналов
+        \n* Машинное зрение
+        \n* Распараллеливание информационных потоков при передаче изображений высокого разрешения
 
-    * **Семантическая сегментация (Semantic segmentation)** — определяет принадлежность наборов пикселей на изображении к определенным классам объектов (например, кошки, собаки, люди, цветы, автомобили и т.д.). 
-    * **Инстанс-сегментация (Instance segmentation)** — в отличие от семантической сегментации, в этой задаче каждый объект внутри одного класса выделяется отдельными сегментами. Например, если на изображении пять кошек, две собаки и десять растений, семантическая сегментация просто выделит все области, на которых есть кошки, собаки или растения, не разделяя отдельные объекты внутри каждого класса (определит, что на изображении есть кошки, собаки и растения), в то время как инстанс-сегментация выделит каждую кошку, собаку и растение как отдельный объект. 
-    * **Паноптическая сегментация (Panoptic segmentation)** — объединяет задачи семантической и инстанс-сегментации. Также в задаче паноптической сегментации каждому пикселю изображения должна быть присвоена ровно одна метка.
-    
-    **Используемые библиотеки:** cv2, detectron2, streamlit.
+        \n**Виды сегментации**:
 
-    **Полезно почитать:** [Detectron2](https://github.com/facebookresearch/detectron2), [Семантическая и инстанс-сегменация](https://neurohive.io/ru/osnovy-data-science/semantic-segmention/).
-    
-    """
+        \n1. **Семантическая сегментация (Semantic segmentation)** — определяет принадлежность наборов пикселей на изображении к определенным классам объектов (например, кошки, собаки, люди, цветы, автомобили и т.д.). 
+        \n2. **Инстанс-сегментация (Instance segmentation)** — в отличие от семантической сегментации, в этой задаче каждый объект внутри одного класса выделяется отдельными сегментами. Например, если на изображении пять кошек, две собаки и десять растений, семантическая сегментация просто выделит все области, на которых есть кошки, собаки или растения, не разделяя отдельные объекты внутри каждого класса (определит, что на изображении есть кошки, собаки и растения), в то время как инстанс-сегментация выделит каждую кошку, собаку и растение как отдельный объект. 
+        \n3. **Паноптическая сегментация (Panoptic segmentation)** — объединяет задачи семантической и инстанс-сегментации. Также в задаче паноптической сегментации каждому пикселю изображения должна быть присвоена ровно одна метка.
+        
+        """
     )
-    # ---------------------------------#
-    st.sidebar.title("Опции для сегментации")
-    ## Select classes to be detected by the model
-    classes_to_detect = st.sidebar.multiselect(
-        "Выберите классы для определения на изображении:", classes, ['person'])
-    mask = np.isin(classes, classes_to_detect)
-    class_idxs = np.nonzero(mask)
+    # ----------Зона пользователя----------
+    st.markdown('''<h2 style='text-align: center; color: black;'
+            >Инстанс-сегментация изображений</h2>''', 
+            unsafe_allow_html=True)
+    st.markdown("""
+        Вам необходимо выбрать классы для сегментации, а так же загрузить само изображение.
+    \nЕсли не указывать определённый класс, модель автоматически распознает и выделит на фото все найденные классы из 80 имеющихся.
+    """)
+    exp_bar = st.expander("Для справки: классы объектов, которые распознаёт mask_rcnn_R_50_FPN_3x")
+    exp_bar.code(classes)
+    ## Выбор классов для моделей
+    classes_to_detect = st.multiselect("Выберите классы для определения на изображении:", classes, ['person'])
+    
+    # mask = np.isin(classes, classes_to_detect)
+    # class_idxs = np.nonzero(mask)
 
-    # Define holder for the processed image
+    # Место для изображения
     img_placeholder = st.empty()
 
-    # Retrieve image
-    uploaded_img = st.file_uploader("Загрузите изображение ниже", type=['jpg', 'jpeg', 'png'])
+    # ----------Обработка и получение результатата----------
+    uploaded_img = st.file_uploader("Загрузите изображение ниже:", type=['jpg', 'jpeg', 'png'])
     if uploaded_img is not None:
-        try:
-            file_bytes = np.asarray(bytearray(uploaded_img.read()), dtype=np.uint8)
-            img = cv2.imdecode(file_bytes, 1)
-            # Detection code
-            outputs = inference(predictor, img)
+        # try:
+        file_bytes = np.asarray(bytearray(uploaded_img.read()), dtype=np.uint8)
+        img = cv2.imdecode(file_bytes, 1)
+        # ДЕТЕКЦИЯ МОДЕЛЬЮ:
+        outputs = inference(predictor, img)
+        if not classes_to_detect:
+            out_image = output_image(cfg, img, outputs)
+        else:
+            mask = np.isin(classes, classes_to_detect)
+            class_idxs = np.nonzero(mask)
             outputs = discriminate(outputs, class_idxs)
             out_image = output_image(cfg, img, outputs)
-            st.image(out_image, caption='Загруженное и обработанное изображение', use_column_width=True)        
-        except:
-            st.subheader("Пожалуйста, загрузите изображение заново, чтобы увидеть изменения")
+        st.image(out_image, caption='Загруженное и обработанное изображение', use_column_width=True)        
+        # except:
+        #     st.subheader("Пожалуйста, загрузите изображение заново, чтобы увидеть изменения")
 
+        # не надо выбирать:
+        # outputs = inference(predictor, img)
+        # out_image = output_image(cfg, img, outputs)
 
+        # НАДО выбирать:
+        # outputs = inference(predictor, img)
+        # outputs = discriminate(outputs, class_idxs)
+        # out_image = output_image(cfg, img, outputs)
+
+# -----------------ЗАПУСКАЕМ-----------------
 if __name__ == '__main__':
     main()
