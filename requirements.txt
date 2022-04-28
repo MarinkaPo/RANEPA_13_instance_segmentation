@@ -6,8 +6,9 @@ click==8
 pyyaml==5.1
 torch==1.10.1
 torchvision==0.11.2
+detectron2==0.6+cpu
 #git+https://github.com/facebookresearch/detectron2.git #detectron2 #выдает ошибку на torch non-zero и exit code
 #https://dl.fbaipublicfiles.com/detectron2/wheels/cpu/torch1.10/index.html #не смог открыть
 opencv-contrib-python-headless
 
-#detectron2==0.6+cpu # не находит такой версии
+#detectron2==0.6+cpu # не находит такой версии  # 0.2.1+cpu
