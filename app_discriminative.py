@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import streamlit as st
+from PIL import Image
 
 import torch,torchvision
 from detectron2 import model_zoo
@@ -120,11 +121,15 @@ def main():
     st.write("""
         Данное приложение позволяет познакомиться с основами сегментации изображений. 
         \nДля этого используется модель *mask_rcnn_R_50_FPN_3x*, обученная распознавать и выделять на фото 80 классов изображений.
-        \n**Используемые библиотеки:** cv2, detectron2, streamlit.
+        \n**Используемые библиотеки:** [cv2](https://opencv.org/),[Detectron2](https://detectron2.readthedocs.io/en/latest/), [Streamlit](https://docs.streamlit.io/library/get-started).
 
-        \n**Полезно почитать:** [Detectron2](https://github.com/facebookresearch/detectron2), [Семантическая и инстанс-сегменация](https://neurohive.io/ru/osnovy-data-science/semantic-segmention/).
+        \n**Полезно почитать:** [О библиотеке Detectron2](https://github.com/facebookresearch/detectron2), [Семантическая и инстанс-сегменация](https://neurohive.io/ru/osnovy-data-science/semantic-segmention/).
         \nДанные подготовили сотрудники ЛИА РАНХиГС.
         """)
+
+    img_pipeline = Image.open('Pipeline_for_instance_segmentation.png') #
+    st.image(img_pipeline, use_column_width='auto', caption='Общий пайплайн для приложения') #width=450
+
     # ----------------О проекте----------------#
 
     expander_bar = st.expander("Что такое сегментация изображений?")
