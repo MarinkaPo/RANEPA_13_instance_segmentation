@@ -119,7 +119,7 @@ def main():
             >Инстанс-сегментация изображений</h1>''', 
             unsafe_allow_html=True)
 
-    st.markdown('''<h3 style='text-align: center; color: #grey;'
+    st.markdown('''<h3 style='text-align: center; color: grey;'
             >Instance segmentation</h3>''', 
             unsafe_allow_html=True)
 
