@@ -1,6 +1,10 @@
 import cv2
 import numpy as np
 import streamlit as st
+import time
+# from datetime import datetime
+# import asyncio
+# from time import time, clock
 from PIL import Image
 
 import torch,torchvision
@@ -109,10 +113,32 @@ def discriminate(outputs, classes_to_detect):
 
     return outputs
 
+
 # -----------------САМО ПРИЛОЖЕНИЕ-----------------
+# st.set_page_config(layout="wide")
 def main():
-    # Инициализация
+    # ----------Инициализация----------
     cfg, classes, predictor = initialization()
+
+    # ----------Обработка и получение результатата----------
+    def image_segmentation(uploaded_img, classes_to_detect): # первый аргумент - uploaded_img
+        file_bytes = np.asarray(bytearray(uploaded_img.read()), dtype=np.uint8)
+        img = cv2.imdecode(file_bytes, 1)
+        # ДЕТЕКЦИЯ МОДЕЛЬЮ:
+        outputs = inference(predictor, img)
+        if not classes_to_detect:
+            out_image = output_image(cfg, img, outputs)
+            num_of_instances = len(outputs['instances']) # сколько объектов найдено
+            what_instances = outputs['instances'].pred_classes # какие классы найдены
+        else:
+            mask = np.isin(classes, classes_to_detect)
+            class_idxs = np.nonzero(mask)
+            outputs = discriminate(outputs, class_idxs)
+            out_image = output_image(cfg, img, outputs)
+            num_of_instances = len(outputs['instances']) # сколько объектов найдено
+            what_instances = outputs['instances'].pred_classes # какие классы найдены
+        st.image(out_image, caption='Загруженное и обработанное изображение', use_column_width=True)
+        return num_of_instances, what_instances    
 
     # Streamlit initialization
     st.markdown('''<h1 style='text-align: center; color: #9F2B68;'
@@ -154,7 +180,7 @@ def main():
     \n7. Оформление микросервиса Streamlit, выгрузка на сервер.
     """)
     
-    # ----------Зона пользователя----------
+    # ----------------Зона ознакомления----------------
     st.markdown('''<h2 style='text-align: center; color: black;'
             >Инстанс-сегментация изображений</h2>''', 
             unsafe_allow_html=True)
@@ -189,8 +215,9 @@ def main():
     """)
     exp_bar = st.expander("Для справки: классы объектов, которые распознаёт mask_rcnn_R_50_FPN_3x")
     exp_bar.code(classes)
-    ## Выбор классов для моделей
-    classes_to_detect = st.multiselect("Выберите классы для определения на изображении:", classes, ['person'])
+
+    ## ----------Выбор классов для моделей----------
+    select_classes = st.multiselect("Выберите классы для определения на изображении:", classes, ['person'])
     
     # mask = np.isin(classes, classes_to_detect)
     # class_idxs = np.nonzero(mask)
@@ -198,34 +225,140 @@ def main():
     # Место для изображения
     img_placeholder = st.empty()
 
-    # ----------Обработка и получение результатата----------
-    uploaded_img = st.file_uploader("Загрузите изображение ниже:", type=['jpg', 'jpeg', 'png'])
-    if uploaded_img is not None:
-        # try:
-        file_bytes = np.asarray(bytearray(uploaded_img.read()), dtype=np.uint8)
-        img = cv2.imdecode(file_bytes, 1)
-        # ДЕТЕКЦИЯ МОДЕЛЬЮ:
-        outputs = inference(predictor, img)
-        if not classes_to_detect:
-            out_image = output_image(cfg, img, outputs)
+    uploaded_image = st.file_uploader("Загрузите изображение ниже:", type=['jpg', 'jpeg', 'png'])
+    if uploaded_image is not None:
+        image_segmentation(uploaded_image, select_classes)
+       
+    # ----------------ЗОНА ЛАБОРАТОРНОЙ РАБОТЫ----------------
+    st.markdown('''<h2 style='text-align: center; color: black;'>
+                Лабораторная работа
+                </h2>''', unsafe_allow_html=True)  
+    # ----------------ЗАДАНИЕ 1----------------            
+    st.markdown('''<h3 style='text-align: Left; color: black;'> 
+            Задание 1
+            </h3>''', unsafe_allow_html=True)   
+
+    st.markdown(''' \n*Подсчёт количества людей на фото* 
+    \nПриходилось ли вам когда-нибудь быстро оценивать, сколько людей пришло на мероприятие, 
+    много ли посетителей в торговом зале или какова длина очереди? 
+    \nДавайте посмотрим, насколько быстро 
+    и качественно это сделаете вы и насколько быстро и качественно это сделает наша 
+    нейросеть.''')
+           
+    st.markdown(''' \n*1. Самостоятельный подсчёт:*
+    \nПеред вами появится изображение большого количества людей. Ваша задача - посчитать на нём каждого человека.
+    \n**Порядок действий:**
+    \n1) Когда будете готовы, - нажмите на "галочку" "Начать задание 1.1". Одновременно с этим загрузится и само фото. Посчитайте количество человек на нём.
+    \n2) Когда вы посчитате всех людей, - впишите полученное число в соответствующую строку и нажмите Enter.
+    \n3) Запишите ваши результаты.
+    ''')
+ #---таймер---   
+    if st.checkbox('Начать задание 1.1'):
+        st.image("photos/crowd_people.jpg", use_column_width='auto', caption=f'Загруженное изображение "crowd_people.jpg"')
+        # start_time_lab_1_student = time.time() # начало счётчика    
+        if 'student_answer_lab1' not in st.session_state:
+            st.session_state.student_answer_lab1 = time.time() # начало счётчика  
+        student_answer_lab1 = st.number_input('Сколько людей на фото?', min_value=0)
+        if student_answer_lab1>0:
+            st.write("Вы нашли", student_answer_lab1, "людей из 37. Определение заняло", round((time.time() - st.session_state.student_answer_lab1), 1), "секунд") # конец счётчика                 
         else:
-            mask = np.isin(classes, classes_to_detect)
-            class_idxs = np.nonzero(mask)
-            outputs = discriminate(outputs, class_idxs)
-            out_image = output_image(cfg, img, outputs)
-        st.image(out_image, caption='Загруженное и обработанное изображение', use_column_width=True)        
-        # except:
-        #     st.subheader("Пожалуйста, загрузите изображение заново, чтобы увидеть изменения")
+            st.write('**Число людей не фото не введено**')
 
-        # не надо выбирать:
-        # outputs = inference(predictor, img)
-        # out_image = output_image(cfg, img, outputs)
+   
+    st.markdown(''' \n*2. Использование модели:*
+    \nТеперь посмотрим, как быстро с этой же задачей справится предобученная модель mask_rcnn_R_50_FPN_3x.
+    \n**Порядок действий:**
+    \n1) Загрузите файл "crowd_people.jpg". После этого начнётся работа модели. 
+    \n2) Запишите время определения людей на фото моделью, оцените полноту и качество решения ею этой задачи.
+    \n3) Сравните со своими результатами. Как думаете, сколько времени бы вам понадобилось, если бы изображение было в 3, 10, 100 раз больше предложенного?
+    ''')
+    lab_img_1 = st.file_uploader('Выберите файл "crowd_people.jpg" и загрузите его:', type=['jpg', 'jpeg', 'png'])
+    if lab_img_1 is not None: 
+        start_time_lab_1_model = time.time() # начало счётчика
+        num_of_instances_lab_img_1, what_instances_lab_img_1 = image_segmentation(lab_img_1, classes_to_detect='person') #%time
+        st.write('Найдено людей:', num_of_instances_lab_img_1, ". Определение заняло", round((time.time() - start_time_lab_1_model), 1), "секунд") # конец счётчика   
 
-        # НАДО выбирать:
-        # outputs = inference(predictor, img)
-        # outputs = discriminate(outputs, class_idxs)
-        # out_image = output_image(cfg, img, outputs)
+    # ----------------ЗАДАНИЕ 2---------------- 
+    st.markdown('''<h3 style='text-align: Left; color: black;'>
+            Задание 2
+            </h3>''', unsafe_allow_html=True) # Задание 2
+    st.markdown(''' \n*Подсчёт различных видов похожих друг на друга объектов* 
+    \nВ этом разделе мы немного усложним задание: вам будет предложено посчитать определенный сорт фруктов среди других объектов, похожих на них. 
+    \nВаши результаты сравним с результатами нейронной сети.''')
+    st.markdown(''' \n*1. Самостоятельный подсчёт:*
+    \nВам будут предложены 2 изображения. Ваша задача - посчитать на нём количество определённых фруктов, в зависимости от задания ниже.
+    \n**Порядок действий:**
+    \n1) Когда будете готовы, - нажмите на "галочку" "Начать задание 2.1". Одновременно с этим загрузится и само фото. Посчитайте количество **бананов** на нём.
+    \n2) Когда посчитаете, - впишите полученное число в соответствующую строку и нажмите Enter.
+    \n3) Запишите ваши результаты.
 
-# -----------------ЗАПУСКАЕМ-----------------
+    \n4) Когда будете готовы ко второму заданию, - нажмите на "галочку" "Начать задание 2.2". Загрузится второе изображение. Посчитайте количество **всех яблок** на нём.
+    \n5) Когда посчитаете, - впишите полученное число в соответствующую строку и нажмите Enter.
+    \n6) Запишите ваши результаты.
+    ''')
+    if st.checkbox('Начать задание 2.1'):
+        st.image("photos/bananas_photo.png", use_column_width='auto', caption=f'Загруженное изображение "bananas_photo.png"')   
+        if 'student_answer_lab2_1' not in st.session_state:
+            st.session_state.student_answer_lab2_1 = time.time() # начало счётчика  
+        student_answer_lab2_1 = st.number_input('Сколько бананов изображено?', min_value=0)
+        if student_answer_lab2_1>0:
+            st.write("Количество бананов, что вы нашли:", int(student_answer_lab2_1), "из 14. Определение заняло", round((time.time() - st.session_state.student_answer_lab2_1), 1), "секунд") # конец счётчика                 
+        else:
+            st.write('**Введите количество бананов на фото**')
+
+    if st.checkbox('Начать задание 2.2'):
+        st.image("photos/apples_photo.png", use_column_width='auto', caption=f'Загруженное изображение "apples_photo.jpg"')  
+        if 'student_answer_lab2_2' not in st.session_state:
+            st.session_state.student_answer_lab2_2 = time.time() # начало счётчика  
+        student_answer_lab2_2 = st.number_input('Сколько всего яблок на изображении?', min_value=0)
+        if student_answer_lab2_2>0:
+            st.write("Количество яблок, что вы нашли:", int(student_answer_lab2_2), "из 22. Определение заняло", round((time.time() - st.session_state.student_answer_lab2_2), 1), "секунд") # конец счётчика                 
+        else:
+            st.write('**Введите количество бананов на фото**')
+
+    
+    st.markdown(''' \n*2. Использование модели:*
+    \nТеперь посмотрим, как быстро с этой же задачей справится всё та же нейронная сеть mask_rcnn_R_50_FPN_3x.
+    \n**Порядок действий:**
+    \n1) Загрузите файл "bananas_photo.png". 
+    \n2) Выберете для подсчёта класс 'banana' в окне ниже.
+    \n3) Нажмите на кнопку 'Сегментация моделью': после этого начнётся работа модели. 
+    \n4) Запишите время определения бананов на фото моделью, оцените полноту и качество поиска.
+    \n5) Вернитесь на этап 1): загрузите файл "apples_photo.png". 
+    \n6) Выберете для подсчёта класс 'apple'.
+    \n7) Нажмите на кнопку 'Сегментация моделью'.
+    \n8) Запишите время определения моделью яблок на фото, оцените полноту и качество поиска.
+    \n9) Сравните со своими результатами. Как думаете, сколько времени бы вам понадобилось, если бы изображения были в 5 раз больше предложенных?
+    ''')
+
+    lab_img_2 = st.file_uploader('Выберите изображение и загрузите его:', type=['jpg', 'jpeg', 'png'])
+    if lab_img_2 is not None: 
+        st.image(lab_img_2, use_column_width='auto', caption=f'Загруженное изображение {lab_img_2.name}')
+
+    lab_2_select_classes = st.multiselect("Выберите классы для определения:", ['banana', 'apple']) # , 'sandwich', 'orange', 'broccoli', 'carrot'
+    if st.button('Сегментация моделью'):
+        if lab_img_2 and lab_2_select_classes is not None:
+            start_time = time.time()
+            num_of_instances_lab_img_2, what_instances_lab_img_2 = image_segmentation(lab_img_2, classes_to_detect=lab_2_select_classes)
+            st.write(f'Нейросеть нашла', num_of_instances_lab_img_2, 'объекта класса', lab_2_select_classes[0])
+            st.write("Определение заняло", round((time.time() - start_time), 1), "секунд")
+            
+
+    st.markdown('''<h3 style='text-align: Left; color: black;'>
+            Выводы по лабораторной работе:
+            </h3>''', unsafe_allow_html=True) # Выводы по лаборатоной работе
+    st.markdown(''' \n**1. Сегментации изображений может быть применена к абсолютно разным объектам.**
+    \nНа простых примерах вы убедились, что сегментация изображений может быть применима для определения разнообразных объектов: от бытовых предметов до человеческих лиц. 
+    Причём изображения одного класса могут отличаться размером, формой, цветом, положением, - и это не составит сложности для хорошо обученной модели.
+    \n**2. Количество объектов значительно не влияет на скорость сегментации.**
+    \nВ отличие от распознавания объектов человеком, количество распознаваемых объектов не сильно влияет на время и скорость распознавания моделью.
+    \n**3. Сегментация изображений - широко используемая, перспективная сфера data science.**
+    \nСегментация изображений относится к сфере компьютерного зрения (computer vision), которая работает с любыми видами изображений и оптимизирует работу человека с визуальными данными, упрощая и ускоряя её.''')
+
+    
+        
+
+# -----------------ЗАПУСКАЕМ ПРИЛОЖЕНИЕ-----------------
 if __name__ == '__main__':
     main()
+    
