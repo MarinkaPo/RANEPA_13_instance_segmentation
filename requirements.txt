@@ -1,8 +1,9 @@
 pip==22.0.4
-streamlit==1.5.1
+streamlit==1.9.0. # 1.5.1 устарела
 click==8
 pillow==8.4.0
 numpy==1.19.5
+protobuf~=3.19.0 # без этого не работает из-за обновления protobuf в гугле
 
 opencv-python==4.5.5.62
 opencv-python-headless==4.5.4.60 
