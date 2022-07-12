@@ -1,13 +1,16 @@
+# Open Source Computer Vision Library - библиотека для работы с компьютерным зрением и обработкой изображений:
 import cv2
+# библиотека NumPy для математических преобразований:
 import numpy as np
+# библиотека streamlit:
 import streamlit as st
+# пакет для работы с временем и датами:
 import time
-# from datetime import datetime
-# import asyncio
-# from time import time, clock
+# библиотека Pillow для работы с изображениями:
 from PIL import Image
-
+# библиотека PyTorch для глубокого обучения и пакет Torchvision с популярными архитектурами моделей и шаблононами для компьютерного зрения:
 import torch,torchvision
+# библиотека detectron2 для работы с компьютерным зрением:
 from detectron2 import model_zoo
 from detectron2.engine import DefaultPredictor
 from detectron2.config import get_cfg
