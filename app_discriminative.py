@@ -312,7 +312,7 @@ def main():
         if student_answer_lab2_1>0:
             st.write("Количество бананов, что вы нашли:", int(student_answer_lab2_1), "из 14. Определение заняло", round((time.time() - st.session_state.student_answer_lab2_1), 1), "секунд") # конец счётчика                 
         else:
-            st.write('**Введите количество бананов на фото**')
+            st.write('*Пока вы не ввели количество*')
 
     if st.checkbox('Начать задание 2.2'):
         st.image("photos/apples_photo.png", use_column_width='auto', caption=f'Загруженное изображение "apples_photo.jpg"')  
@@ -322,7 +322,7 @@ def main():
         if student_answer_lab2_2>0:
             st.write("Количество яблок, что вы нашли:", int(student_answer_lab2_2), "из 22. Определение заняло", round((time.time() - st.session_state.student_answer_lab2_2), 1), "секунд") # конец счётчика                 
         else:
-            st.write('**Введите количество бананов на фото**')
+            st.write('*Пока вы не ввели количество*')
 
     
     st.markdown(''' \n*2. Использование модели:*
