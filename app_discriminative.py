@@ -50,6 +50,7 @@ def initialization():
 def inference(predictor, img):
     return predictor(img)
 
+# кешируем функцию вывода обработанного изображения:
 @st.cache
 def output_image(cfg, img, outputs):
     v = Visualizer(img[:, :, ::-1], MetadataCatalog.get(cfg.DATASETS.TRAIN[0]), scale=1.2)
@@ -58,7 +59,7 @@ def output_image(cfg, img, outputs):
 
     return processed_img
 
-#@st.cache
+# функция ввода (загрузки) изображения:
 def retrieve_image():
     uploaded_img = st.file_uploader("Загрузите изображение ниже", type=['jpg', 'jpeg', 'png'])
     uploaded_img_cache = None
@@ -72,7 +73,8 @@ def retrieve_image():
         # except:
         #     pass
         # return img
-    
+
+# кешируем функцию кодирования загруженного изображения в вид, пригодный для модели:    
 @st.cache
 def image(uploaded_img):
     file_bytes = np.asarray(bytearray(uploaded_img.read()), dtype=np.uint8)
@@ -83,6 +85,7 @@ def image(uploaded_img):
         return None
     return img
 
+# кешируем функцию, изменяющую классы для детекции в соответствии с выбранными пользователем:
 @st.cache
 def discriminate(outputs, classes_to_detect):
     """Select which classes to detect from an output.
