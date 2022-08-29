@@ -150,15 +150,15 @@ def main():
 
     # Streamlit initialization
     st.markdown('''<h1 style='text-align: center; color: #9F2B68;'
-            >Инстанс-сегментация изображений</h1>''', 
+            >Сегментация изображений</h1>''', 
             unsafe_allow_html=True)
-
-    st.markdown('''<h3 style='text-align: center; color: grey;'
-            >Instance segmentation</h3>''', 
-            unsafe_allow_html=True)
+    st.image('Segmentation_title.jpg', use_column_width='auto')
+    # st.markdown('''<h3 style='text-align: center; color: grey;'
+    #         >Instance segmentation</h3>''', 
+    #         unsafe_allow_html=True)
 
     st.write("""
-        Данное приложение позволяет познакомиться с основами сегментации изображений. 
+        Лабораторная работа *Сегментация изображений* позволяет познакомиться с основами сегментации изображений. 
         \nДля этого используется модель *mask_rcnn_R_50_FPN_3x*, обученная распознавать и выделять на фото 80 классов изображений.
         \n**Используемые библиотеки:** [cv2](https://opencv.org/),[Detectron2](https://detectron2.readthedocs.io/en/latest/), [Streamlit](https://docs.streamlit.io/library/get-started).
 
@@ -166,11 +166,27 @@ def main():
         \nДанные подготовили сотрудники ЛИА РАНХиГС.
         """)
 
+    # ----------------Актуальность тематики----------------#
+    st.markdown('''<h2 style='text-align: center; color: black;'
+            >Актуальность тематики</h2>''', 
+            unsafe_allow_html=True)
+    st.write(""" \n##### **Кому будет полезна эта лабораторная работа и почему?**
+    \n* **Студентам факультетов дизайна:**
+    \nДля ознакомления с возможностями применения нейронных сетей при работе с изображениями.
+    \n* **Студентам направления цифровых медиа и цифровой экономики:**
+    \nДля знакомства с возможностями распознавания предметов, лиц и других объектов на фото, видео и в режиме реального времени.
+    \n* **Студентам других специальностей:**
+    \nДля общего понимания тематики компьютерного зрения (computer vision , CV).
+    """)
+
     # ----------------Pipeline description----------------#
+    st.markdown('''<h2 style='text-align: center; color: black;'
+            >Этапы работы</h2>''', 
+            unsafe_allow_html=True)
     img_pipeline = Image.open('Pipeline_for_instance_segmentation.png') #
     st.image(img_pipeline, use_column_width='auto', caption='Общий пайплайн для приложения') #width=450
 
-    pipeline_bar = st.expander("Пайплайн микросервиса:")
+    pipeline_bar = st.expander("Пайплайн лабораорной работы")
     pipeline_bar.markdown(
     """
     \n**Этапы:**
